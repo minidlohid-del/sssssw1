@@ -4,41 +4,42 @@ import logging
 from steam.client import SteamClient
 from steam.enums import EResult
 
-# Включаем полные логи самой библиотеки Steam, чтобы увидеть внутренние пакеты
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 STEAM_USERNAME = "sss102ax"
 STEAM_PASSWORD = "loh_1111"
 GAMES_TO_IDLE = [730] # CS2
 
 def main():
-    print("[System] Initializing Steam Client...")
+    print("[System] Connecting to Steam...")
     client = SteamClient()
-    
-    # Заставляем библиотеку прикидываться стандартным десктопным клиентом
     client.set_credential_location(".") 
 
     @client.on('logged_on')
     def handle_logged_on():
-        print(f"[Success] Logged in successfully as {STEAM_USERNAME}!")
-        client.games_played(GAMES_TO_IDLE)
-        print("[Success] CS2 hours farming started!")
-        time.sleep(1200) # Держим сессию 20 минут
+        print(f"[Success] Logged in as {STEAM_USERNAME}!")
+        
+        # Запускаем цикл на 20 минут, который каждые 30 секунд включает CS2 заново
+        print("[System] Starting loop to force CS2 status...")
+        for minute in range(40): # 40 раз по 30 секунд = 20 минут
+            if not client.logged_on:
+                print("[Warning] Disconnected from Steam inside loop.")
+                break
+            
+            # Жёстко пинаем Стим, чтобы игра не вылетала
+            client.games_played(GAMES_TO_IDLE)
+            time.sleep(30)
+            
+        print("[System] 20 minutes finished. Logging out...")
         client.logout()
 
     @client.on('error')
     def handle_error(result):
-        print(f"[Error] Connection failed with result code: {result} ({EResult(result).name})")
+        print(f"[Error] Connection failed: {result}")
 
-    print("[System] Attempting to establish connection to Steam CM...")
-    
-    # Пробуем подключиться напрямую
     result = client.login(username=STEAM_USERNAME, password=STEAM_PASSWORD)
-    
     if result == EResult.OK:
         client.run_forever()
-    else:
-        print(f"[Error] Initial login result: {result} ({EResult(result).name})")
 
 if __name__ == "__main__":
     main()
