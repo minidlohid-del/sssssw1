@@ -1,0 +1,29 @@
+name: Steam CS2 Hours Farm
+
+on:
+  schedule:
+    # Запуск каждый час (0 минут каждого часа) круглые сутки
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    # Позволяет запускать бота вручную кнопкой в панели управления
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/with-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install Steam Library
+      run: |
+        python -m pip install --upgrade pip
+        pip install steam[client]
+
+    - name: Run Steam Farm Script
+      run: python steam_pro.py
